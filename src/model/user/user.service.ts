@@ -7,7 +7,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 
 import { PrismaClient } from '@prisma/client';
 import { ResultData } from '@/common/class/api-result';
-import { decryptData, encryptData } from '@/common/utils/cryptogram';
+import { makeSalt, encryptPassword } from '@/common/utils/cryptogram';
 import * as console from 'console';
 
 @Injectable()
@@ -37,15 +37,18 @@ export class UserService {
   }
 
   async login(loginInfo: LoginDto) {
+    console.log(loginInfo);
     const user = await this.prismaService.user.findFirstOrThrow({
       where: {
         name: loginInfo.name,
       },
     });
-    const hashPwd = encryptData(loginInfo.password, 'PASSWORD_KEY');
-    console.log(user, hashPwd);
+   
     if (!user) return ResultData.fail(402, '用户不存在');
+    const salt = makeSalt(); // 制作密码盐
+    const hashPwd = encryptPassword(loginInfo.password, salt);  // 加密密码
     if (user && user.password === hashPwd) {
+      delete user.password;
       return ResultData.ok(user);
     } else {
       return ResultData.fail(402, '密码错误');
@@ -62,7 +65,8 @@ export class UserService {
     if (user) {
       return ResultData.fail(402, '用户名已存在');
     } else {
-      const hashPwd = decryptData(registerInfo.password);
+      const salt = makeSalt(); // 制作密码盐
+      const hashPwd = encryptPassword(registerInfo.password, salt);  // 加密密码
       console.log(hashPwd, 'hashPwd');
       registerInfo.password = hashPwd;
       const data = await this.prismaService.user.create({

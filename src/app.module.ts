@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ModelModule } from '@/model/model.module';
 import { PrismaModule } from '@/prisma/prisma.module';
+import { JwtModule } from '@nestjs/jwt';
 
 const envFilePath = ['.env'];
 export const IS_DEV = process.env.RUNNING_ENV !== 'prod';
@@ -38,6 +39,10 @@ if (IS_DEV) {
     }),
     PrismaModule,
     ModelModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

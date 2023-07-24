@@ -15,12 +15,12 @@ import { RegisterDto } from './dto/register.dto';
 import { ApiTags, ApiExtraModels, OmitType } from '@nestjs/swagger';
 import { PrismaModel } from '@/common/class/prisma';
 import { ApiResult } from '@/common/class/api-result';
+import {unIncludedPassword} from './class'
 
 @ApiTags('User')
 @ApiExtraModels(
   PrismaModel.User,
-  OmitType(PrismaModel.User, ['password'] as const),
-  OmitType(PrismaModel.User, ['name'] as const),
+  unIncludedPassword
 )
 @Controller('user')
 export class UserController {
@@ -52,12 +52,14 @@ export class UserController {
     return this.userService.remove(+id);
   }
 
+  
+  @ApiResult(unIncludedPassword, '登录用户')
   @Post('login')
   login(@Body() loginInfo: LoginDto) {
     return this.userService.login(loginInfo);
   }
 
-  @ApiResult(OmitType(PrismaModel.User, ['password'] as const), '注册用户')
+  @ApiResult(unIncludedPassword, '注册用户')
   @Post('register')
   register(@Body() registerInfo: RegisterDto) {
     return this.userService.register(registerInfo);
